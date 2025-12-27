@@ -63,12 +63,12 @@ function createHash(data) {
 // API Routes
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: '2.0.0' });
 });
 
 // Get participants
-app.get('/api/v1/participants', (req, res) => {
+app.get('/v1/participants', (req, res) => {
   const { tenant } = req.query;
   let filtered = storage.participants;
   
@@ -80,7 +80,7 @@ app.get('/api/v1/participants', (req, res) => {
 });
 
 // Propose a card (can be by agent or human)
-app.post('/api/v1/cards/propose', (req, res) => {
+app.post('/v1/cards/propose', (req, res) => {
   const {
     jobType,
     target,
@@ -112,7 +112,7 @@ app.post('/api/v1/cards/propose', (req, res) => {
 });
 
 // Get card by ID
-app.get('/api/v1/cards/:id', (req, res) => {
+app.get('/v1/cards/:id', (req, res) => {
   const card = storage.cards.find(c => c.id === req.params.id);
   
   if (!card) {
@@ -123,7 +123,7 @@ app.get('/api/v1/cards/:id', (req, res) => {
 });
 
 // Request permit from UBL
-app.post('/api/v1/policy/permit', (req, res) => {
+app.post('/v1/policy/permit', (req, res) => {
   const {
     card_id,
     actor,
@@ -150,7 +150,7 @@ app.post('/api/v1/policy/permit', (req, res) => {
 });
 
 // Issue a command
-app.post('/api/v1/commands/issue', (req, res) => {
+app.post('/v1/commands/issue', (req, res) => {
   const {
     permit_id,
     card_id,
@@ -190,7 +190,7 @@ app.post('/api/v1/commands/issue', (req, res) => {
 });
 
 // Query commands
-app.get('/api/v1/query/commands', (req, res) => {
+app.get('/v1/query/commands', (req, res) => {
   const { pending, tenant } = req.query;
   
   let filtered = storage.commands;
@@ -210,7 +210,7 @@ app.get('/api/v1/query/commands', (req, res) => {
 });
 
 // Finish execution and create receipt
-app.post('/api/v1/exec.finish', (req, res) => {
+app.post('/v1/exec.finish', (req, res) => {
   const {
     jti,
     status,
@@ -256,7 +256,7 @@ app.post('/api/v1/exec.finish', (req, res) => {
 });
 
 // Get receipts
-app.get('/api/v1/receipts', (req, res) => {
+app.get('/v1/receipts', (req, res) => {
   const { tenant, limit = 50 } = req.query;
   
   let filtered = storage.receipts;
@@ -279,7 +279,7 @@ app.get('/api/v1/receipts', (req, res) => {
 });
 
 // Get receipt by ID
-app.get('/api/v1/receipts/:id', (req, res) => {
+app.get('/v1/receipts/:id', (req, res) => {
   const receipt = storage.receipts.find(r => r.receipt_id === req.params.id);
   
   if (!receipt) {
@@ -290,7 +290,7 @@ app.get('/api/v1/receipts/:id', (req, res) => {
 });
 
 // Get allowlist (read-only)
-app.get('/api/v1/allowlist', (req, res) => {
+app.get('/v1/allowlist', (req, res) => {
   const { tenant } = req.query;
   
   // Mock allowlist
@@ -314,7 +314,7 @@ app.get('/api/v1/allowlist', (req, res) => {
 });
 
 // Get policy manifest
-app.get('/api/v1/policy/manifest', (req, res) => {
+app.get('/v1/policy/manifest', (req, res) => {
   const manifest = {
     version: "2.0.0",
     policy_hash: createHash({ version: "2.0.0", tenant: "T.UBL" }),
@@ -337,7 +337,7 @@ app.get('/api/v1/policy/manifest', (req, res) => {
 });
 
 // Simulate WebAuthn challenge
-app.post('/api/v1/auth/webauthn/challenge', (req, res) => {
+app.post('/v1/auth/webauthn/challenge', (req, res) => {
   const challenge = {
     challenge_id: `challenge_${uuidv4()}`,
     challenge: Buffer.from(uuidv4()).toString('base64'),
@@ -348,7 +348,7 @@ app.post('/api/v1/auth/webauthn/challenge', (req, res) => {
 });
 
 // Verify WebAuthn response
-app.post('/api/v1/auth/webauthn/verify', (req, res) => {
+app.post('/v1/auth/webauthn/verify', (req, res) => {
   const { challenge_id, response } = req.body;
   
   // Mock verification (always succeeds)
