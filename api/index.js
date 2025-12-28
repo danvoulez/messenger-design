@@ -9,355 +9,371 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// In-memory storage (for demo purposes)
+// In-memory storage (for demo purposes - in production use a database)
 const storage = {
-  permits: [],
-  commands: [],
-  receipts: [],
-  participants: [
+  users: [
     {
       id: "U.001",
-      type: "human",
+      username: "dan",
       display_name: "Dan",
-      tenant_id: "T.UBL",
-      roles: ["admin", "operator"],
-      risk_ceiling: "L5",
-      capabilities: ["propose", "simulate", "execute:L0-L5"],
-      presence: "online",
-      verified: true,
-      avatar_url: "https://api.dicebear.com/7.x/notionists/svg?seed=dan&backgroundColor=f5f5f5"
+      avatar_url: "https://api.dicebear.com/7.x/notionists/svg?seed=dan&backgroundColor=f5f5f5",
+      status: "online",
+      last_seen: new Date().toISOString()
     },
     {
-      id: "A.office:core.operator",
-      type: "agent",
-      display_name: "Core Agent",
-      tenant_id: "T.UBL",
-      roles: ["operator", "viewer"],
-      risk_ceiling: "L2",
-      capabilities: ["propose", "simulate", "execute:L0-L2"],
-      presence: "online",
-      verified: true,
-      notes: "runner@LAB_512 pull-only"
+      id: "U.002",
+      username: "alex",
+      display_name: "Alex (Advisor)",
+      avatar_url: "https://api.dicebear.com/7.x/notionists/svg?seed=alex&backgroundColor=e0e0e0",
+      status: "online",
+      last_seen: new Date().toISOString()
     },
     {
-      id: "A.office:review.analyzer",
-      type: "agent",
-      display_name: "Code Review Agent",
-      tenant_id: "T.UBL",
-      roles: ["viewer"],
-      risk_ceiling: "L1",
-      capabilities: ["propose", "simulate"],
-      presence: "online",
-      verified: true,
-      notes: "Analysis only, no execution"
+      id: "U.003",
+      username: "sarah",
+      display_name: "Sarah (Designer)",
+      avatar_url: "https://api.dicebear.com/7.x/notionists/svg?seed=sarah&backgroundColor=c8e6c9",
+      status: "away",
+      last_seen: new Date(Date.now() - 3600000).toISOString()
     }
   ],
-  cards: []
+  conversations: [
+    {
+      id: "conv_001",
+      type: "direct",
+      name: "Alex (Advisor)",
+      avatar_url: "https://api.dicebear.com/7.x/notionists/svg?seed=alex&backgroundColor=e0e0e0",
+      participants: ["U.001", "U.002"],
+      last_message: {
+        text: "Let's sync on the investor deck",
+        timestamp: new Date(Date.now() - 10800000).toISOString(),
+        sender: "U.002"
+      },
+      unread_count: 0,
+      created_at: new Date(Date.now() - 86400000).toISOString()
+    },
+    {
+      id: "conv_002",
+      type: "direct",
+      name: "Sarah (Designer)",
+      avatar_url: "https://api.dicebear.com/7.x/notionists/svg?seed=sarah&backgroundColor=c8e6c9",
+      participants: ["U.001", "U.003"],
+      last_message: {
+        text: "The new mockups are ready!",
+        timestamp: new Date(Date.now() - 7200000).toISOString(),
+        sender: "U.003"
+      },
+      unread_count: 2,
+      created_at: new Date(Date.now() - 172800000).toISOString()
+    },
+    {
+      id: "conv_003",
+      type: "group",
+      name: "UBL 2.0 Sprint",
+      avatar_url: null,
+      participants: ["U.001", "U.002", "U.003"],
+      last_message: {
+        text: "Policy VM bytecode tests passing",
+        timestamp: new Date(Date.now() - 720000).toISOString(),
+        sender: "U.001"
+      },
+      unread_count: 0,
+      created_at: new Date(Date.now() - 259200000).toISOString()
+    }
+  ],
+  messages: [
+    {
+      id: "msg_001",
+      conversation_id: "conv_001",
+      sender_id: "U.002",
+      text: "Hey Dan, do you have time this week to review the investor deck?",
+      timestamp: new Date(Date.now() - 14400000).toISOString(),
+      status: "read",
+      type: "text"
+    },
+    {
+      id: "msg_002",
+      conversation_id: "conv_001",
+      sender_id: "U.001",
+      text: "Sure! How about Thursday afternoon?",
+      timestamp: new Date(Date.now() - 12600000).toISOString(),
+      status: "read",
+      type: "text"
+    },
+    {
+      id: "msg_003",
+      conversation_id: "conv_001",
+      sender_id: "U.002",
+      text: "Perfect! I'll send over the deck by Wednesday.",
+      timestamp: new Date(Date.now() - 11800000).toISOString(),
+      status: "read",
+      type: "text"
+    },
+    {
+      id: "msg_004",
+      conversation_id: "conv_001",
+      sender_id: "U.002",
+      text: "Let's sync on the investor deck",
+      timestamp: new Date(Date.now() - 10800000).toISOString(),
+      status: "read",
+      type: "text"
+    }
+  ],
+  typing: {}
 };
 
-// Helper function to create blake3 hash (mock)
-function createHash(data) {
-  return `blake3:${Buffer.from(JSON.stringify(data)).toString('base64').substring(0, 32)}`;
+// Helper function to create timestamps
+function createTimestamp() {
+  return new Date().toISOString();
 }
 
 // API Routes
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', version: '2.0.0' });
+  res.json({ status: 'ok', version: '2.0.0', service: 'messenger' });
 });
 
-// Get participants
-app.get('/v1/participants', (req, res) => {
-  const { tenant } = req.query;
-  let filtered = storage.participants;
+// ============================================
+// USER ENDPOINTS
+// ============================================
+
+// Get current user
+app.get('/v1/users/me', (req, res) => {
+  // In a real app, this would be authenticated
+  const user = storage.users.find(u => u.id === "U.001");
+  res.json({ user });
+});
+
+// Get all users
+app.get('/v1/users', (req, res) => {
+  res.json({ users: storage.users });
+});
+
+// Update user status
+app.patch('/v1/users/me/status', (req, res) => {
+  const { status } = req.body;
+  const user = storage.users.find(u => u.id === "U.001");
   
-  if (tenant) {
-    filtered = filtered.filter(p => p.tenant_id === tenant);
+  if (user) {
+    user.status = status;
+    user.last_seen = createTimestamp();
   }
   
-  res.json({ participants: filtered });
+  res.json({ user });
 });
 
-// Propose a card (can be by agent or human)
-app.post('/v1/cards/propose', (req, res) => {
-  const {
-    jobType,
-    target,
-    params,
-    tenant_id,
-    proposed_by,
-    risk_level = "L0"
-  } = req.body;
+// ============================================
+// CONVERSATION ENDPOINTS
+// ============================================
+
+// Get all conversations
+app.get('/v1/conversations', (req, res) => {
+  // Sort by last message timestamp
+  const sorted = [...storage.conversations].sort((a, b) => 
+    new Date(b.last_message.timestamp) - new Date(a.last_message.timestamp)
+  );
   
-  const card = {
-    id: `card_${uuidv4()}`,
-    jti: `jti_${Date.now()}`,
-    jobType,
-    target,
-    params,
-    tenant_id,
-    proposed_by,
-    risk_level,
-    policy_hash: createHash({ jobType, target, tenant_id }),
-    subject_hash: createHash({ jobType, target, params }),
-    status: 'pending',
-    ttl: 300, // 5 minutes in seconds
-    created_at: new Date().toISOString(),
-    expires_at: new Date(Date.now() + 300000).toISOString()
+  res.json({ conversations: sorted });
+});
+
+// Get a specific conversation
+app.get('/v1/conversations/:id', (req, res) => {
+  const conversation = storage.conversations.find(c => c.id === req.params.id);
+  
+  if (!conversation) {
+    return res.status(404).json({ error: 'Conversation not found' });
+  }
+  
+  res.json({ conversation });
+});
+
+// Create new conversation
+app.post('/v1/conversations', (req, res) => {
+  const { type, name, participants } = req.body;
+  
+  const conversation = {
+    id: `conv_${uuidv4()}`,
+    type: type || 'direct',
+    name,
+    avatar_url: null,
+    participants,
+    last_message: null,
+    unread_count: 0,
+    created_at: createTimestamp()
   };
   
-  storage.cards.push(card);
-  res.status(201).json({ card });
+  storage.conversations.push(conversation);
+  res.status(201).json({ conversation });
 });
 
-// Get card by ID
-app.get('/v1/cards/:id', (req, res) => {
-  const card = storage.cards.find(c => c.id === req.params.id);
+// Mark conversation as read
+app.post('/v1/conversations/:id/read', (req, res) => {
+  const conversation = storage.conversations.find(c => c.id === req.params.id);
   
-  if (!card) {
-    return res.status(404).json({ error: 'Card not found' });
+  if (!conversation) {
+    return res.status(404).json({ error: 'Conversation not found' });
   }
   
-  res.json({ card });
+  conversation.unread_count = 0;
+  res.json({ conversation });
 });
 
-// Request permit from UBL
-app.post('/v1/policy/permit', (req, res) => {
-  const {
-    card_id,
-    actor,
-    policy_hash,
-    subject_hash,
-    risk_level
-  } = req.body;
+// ============================================
+// MESSAGE ENDPOINTS
+// ============================================
+
+// Get messages for a conversation
+app.get('/v1/conversations/:id/messages', (req, res) => {
+  const { limit = 50, before } = req.query;
   
-  // Simulate permit logic
-  const permit = {
-    permit_id: `permit_${uuidv4()}`,
-    card_id,
-    actor,
-    policy_hash,
-    subject_hash,
-    risk_level,
-    approved: true,
-    approved_at: new Date().toISOString(),
-    expires_at: new Date(Date.now() + 300000).toISOString()
+  let messages = storage.messages.filter(m => m.conversation_id === req.params.id);
+  
+  // Filter by timestamp if 'before' is provided
+  if (before) {
+    messages = messages.filter(m => new Date(m.timestamp) < new Date(before));
+  }
+  
+  // Sort by timestamp descending and limit
+  messages = messages
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, parseInt(limit))
+    .reverse(); // Reverse to show oldest first
+  
+  res.json({ messages });
+});
+
+// Send a message
+app.post('/v1/conversations/:id/messages', (req, res) => {
+  const { text, type = 'text', attachments = [] } = req.body;
+  const conversationId = req.params.id;
+  
+  const conversation = storage.conversations.find(c => c.id === conversationId);
+  if (!conversation) {
+    return res.status(404).json({ error: 'Conversation not found' });
+  }
+  
+  const message = {
+    id: `msg_${uuidv4()}`,
+    conversation_id: conversationId,
+    // NOTE: In a production app, sender_id should come from authenticated session/JWT token
+    // For this demo, we're hardcoding to U.001 (Dan)
+    sender_id: "U.001",
+    text,
+    type,
+    attachments,
+    timestamp: createTimestamp(),
+    status: 'sent'
   };
   
-  storage.permits.push(permit);
-  res.status(200).json({ permit });
-});
-
-// Issue a command
-app.post('/v1/commands/issue', (req, res) => {
-  const {
-    permit_id,
-    card_id,
-    jobType,
-    target,
-    params,
-    actor
-  } = req.body;
+  storage.messages.push(message);
   
-  const permit = storage.permits.find(p => p.permit_id === permit_id);
-  if (!permit) {
-    return res.status(404).json({ error: 'Permit not found' });
-  }
-  
-  const command = {
-    jti: `jti_${Date.now()}`,
-    permit_id,
-    card_id,
-    jobType,
-    target,
-    params,
-    actor,
-    status: 'pending',
-    issued_at: new Date().toISOString()
+  // Update conversation's last message
+  conversation.last_message = {
+    text: message.text,
+    timestamp: message.timestamp,
+    sender: message.sender_id
   };
   
-  storage.commands.push(command);
-  
-  // Update card status
-  const card = storage.cards.find(c => c.id === card_id);
-  if (card) {
-    card.status = 'issued';
-    card.command_jti = command.jti;
-  }
-  
-  res.status(200).json({ command });
+  // Broadcast to other participants via WebSocket (handled in server.js)
+  res.status(201).json({ message });
 });
 
-// Query commands
-app.get('/v1/query/commands', (req, res) => {
-  const { pending, tenant } = req.query;
+// Update message status (read, delivered, etc)
+app.patch('/v1/messages/:id', (req, res) => {
+  const { status } = req.body;
+  const message = storage.messages.find(m => m.id === req.params.id);
   
-  let filtered = storage.commands;
-  
-  if (pending === '1' || pending === 'true') {
-    filtered = filtered.filter(c => c.status === 'pending');
+  if (!message) {
+    return res.status(404).json({ error: 'Message not found' });
   }
   
-  if (tenant) {
-    filtered = filtered.filter(c => {
-      const card = storage.cards.find(card => card.id === c.card_id);
-      return card && card.tenant_id === tenant;
-    });
-  }
-  
-  res.json({ commands: filtered });
+  message.status = status;
+  res.json({ message });
 });
 
-// Finish execution and create receipt
-app.post('/v1/exec.finish', (req, res) => {
-  const {
-    jti,
-    status,
-    summary,
-    logs_hash,
-    artifacts = [],
-    usage = {}
-  } = req.body;
+// Delete a message
+app.delete('/v1/messages/:id', (req, res) => {
+  const index = storage.messages.findIndex(m => m.id === req.params.id);
   
-  const command = storage.commands.find(c => c.jti === jti);
-  if (!command) {
-    return res.status(404).json({ error: 'Command not found' });
+  if (index === -1) {
+    return res.status(404).json({ error: 'Message not found' });
   }
   
-  // Update command status
-  command.status = status;
-  command.completed_at = new Date().toISOString();
-  
-  // Create receipt
-  const receipt = {
-    receipt_id: `receipt_${uuidv4()}`,
-    jti,
-    status,
-    summary,
-    logs_hash: logs_hash || createHash({ jti, status, summary }),
-    artifacts,
-    usage,
-    started_at: command.issued_at,
-    completed_at: command.completed_at,
-    duration_ms: Date.now() - new Date(command.issued_at).getTime()
-  };
-  
-  storage.receipts.push(receipt);
-  
-  // Update card
-  const card = storage.cards.find(c => c.command_jti === jti);
-  if (card) {
-    card.status = 'completed';
-    card.receipt_id = receipt.receipt_id;
-  }
-  
-  res.status(200).json({ receipt });
+  storage.messages.splice(index, 1);
+  res.json({ success: true });
 });
 
-// Get receipts
-app.get('/v1/receipts', (req, res) => {
-  const { tenant, limit = 50 } = req.query;
+// ============================================
+// TYPING INDICATORS
+// ============================================
+
+// Set typing status
+app.post('/v1/conversations/:id/typing', (req, res) => {
+  const { is_typing } = req.body;
+  const conversationId = req.params.id;
+  const userId = "U.001"; // Current user
   
-  let filtered = storage.receipts;
-  
-  if (tenant) {
-    filtered = filtered.filter(r => {
-      const command = storage.commands.find(c => c.jti === r.jti);
-      if (!command) return false;
-      const card = storage.cards.find(card => card.id === command.card_id);
-      return card && card.tenant_id === tenant;
-    });
+  if (!storage.typing[conversationId]) {
+    storage.typing[conversationId] = {};
   }
   
-  // Sort by completion time, newest first
-  filtered = filtered.sort((a, b) => 
-    new Date(b.completed_at) - new Date(a.completed_at)
-  ).slice(0, parseInt(limit));
-  
-  res.json({ receipts: filtered });
-});
-
-// Get receipt by ID
-app.get('/v1/receipts/:id', (req, res) => {
-  const receipt = storage.receipts.find(r => r.receipt_id === req.params.id);
-  
-  if (!receipt) {
-    return res.status(404).json({ error: 'Receipt not found' });
+  if (is_typing) {
+    storage.typing[conversationId][userId] = createTimestamp();
+  } else {
+    delete storage.typing[conversationId][userId];
   }
   
-  res.json({ receipt });
+  res.json({ success: true });
 });
 
-// Get allowlist (read-only)
-app.get('/v1/allowlist', (req, res) => {
-  const { tenant } = req.query;
+// Get typing users for conversation
+app.get('/v1/conversations/:id/typing', (req, res) => {
+  const conversationId = req.params.id;
+  const typingUsers = storage.typing[conversationId] || {};
   
-  // Mock allowlist
-  const allowlist = [
-    {
-      office: "OFFICE.Core",
-      tenant_id: tenant || "T.UBL",
-      actions: [
-        { jobType: "docker.run", risk: "L2", description: "Run sandboxed container" },
-        { jobType: "git.clone", risk: "L0", description: "Clone repository" },
-        { jobType: "npm.install", risk: "L1", description: "Install npm packages" },
-        { jobType: "build.run", risk: "L2", description: "Execute build" },
-        { jobType: "test.run", risk: "L1", description: "Run test suite" },
-        { jobType: "deploy.staging", risk: "L3", description: "Deploy to staging" },
-        { jobType: "deploy.production", risk: "L5", description: "Deploy to production" }
-      ]
+  // Remove stale typing indicators (older than 5 seconds)
+  const now = Date.now();
+  Object.keys(typingUsers).forEach(userId => {
+    if (now - new Date(typingUsers[userId]).getTime() > 5000) {
+      delete typingUsers[userId];
     }
-  ];
-  
-  res.json({ allowlist });
-});
-
-// Get policy manifest
-app.get('/v1/policy/manifest', (req, res) => {
-  const manifest = {
-    version: "2.0.0",
-    policy_hash: createHash({ version: "2.0.0", tenant: "T.UBL" }),
-    tenant: "T.UBL",
-    risk_levels: {
-      L0: { name: "Trivial", approval: "auto", hold_time: 0 },
-      L1: { name: "Low", approval: "click", hold_time: 0 },
-      L2: { name: "Medium", approval: "click", hold_time: 0 },
-      L3: { name: "High", approval: "hold", hold_time: 3000 },
-      L4: { name: "Critical", approval: "webauthn", hold_time: 0 },
-      L5: { name: "Maximum", approval: "webauthn+quorum", hold_time: 0 }
-    },
-    quorum: {
-      L5: { required: 2, timeout: 300 }
-    },
-    published_at: new Date().toISOString()
-  };
-  
-  res.json({ manifest });
-});
-
-// Simulate WebAuthn challenge
-app.post('/v1/auth/webauthn/challenge', (req, res) => {
-  const challenge = {
-    challenge_id: `challenge_${uuidv4()}`,
-    challenge: Buffer.from(uuidv4()).toString('base64'),
-    expires_at: new Date(Date.now() + 60000).toISOString()
-  };
-  
-  res.json({ challenge });
-});
-
-// Verify WebAuthn response
-app.post('/v1/auth/webauthn/verify', (req, res) => {
-  const { challenge_id, response } = req.body;
-  
-  // Mock verification (always succeeds)
-  res.json({ 
-    verified: true,
-    step_up_token: `stepup_${uuidv4()}`,
-    valid_until: new Date(Date.now() + 600000).toISOString()
   });
+  
+  const userIds = Object.keys(typingUsers);
+  res.json({ typing_users: userIds });
 });
+
+// ============================================
+// SEARCH
+// ============================================
+
+// Search messages
+app.get('/v1/search/messages', (req, res) => {
+  const { q, conversation_id } = req.query;
+  
+  if (!q) {
+    return res.status(400).json({ error: 'Query parameter "q" is required' });
+  }
+  
+  let results = storage.messages.filter(m => 
+    m.text && m.text.toLowerCase().includes(q.toLowerCase())
+  );
+  
+  if (conversation_id) {
+    results = results.filter(m => m.conversation_id === conversation_id);
+  }
+  
+  // Sort by relevance (timestamp for now)
+  results = results.sort((a, b) => 
+    new Date(b.timestamp) - new Date(a.timestamp)
+  ).slice(0, 50);
+  
+  res.json({ messages: results });
+});
+
+// Export storage for WebSocket access
+app.locals.storage = storage;
 
 // Export for Vercel
 module.exports = app;
