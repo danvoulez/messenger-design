@@ -32,10 +32,13 @@ export async function POST(request: Request, segmentData: { params: Params }) {
     return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
   }
   
+  // TODO: In production, extract sender_id from authenticated session/JWT token
+  // Example: const userId = await auth.getUserId(request);
+  // For demo purposes, hardcoding to U.001
   const message = {
     id: `msg_${Date.now()}`,
     conversation_id: params.id,
-    sender_id: "U.001", // Current user (in production, get from auth)
+    sender_id: "U.001", // SECURITY: Replace with authenticated user ID in production
     text,
     type,
     attachments,

@@ -1,4 +1,4 @@
-import { Conversation, Message, User } from '@/types';
+import { Conversation, Message, User, Attachment } from '@/types';
 
 // In-memory storage (for demo purposes - in production use a database)
 export const storage = {

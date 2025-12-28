@@ -1,3 +1,12 @@
+export interface Attachment {
+  id: string;
+  type: 'image' | 'video' | 'audio' | 'document';
+  url: string;
+  name: string;
+  size: number;
+  mimeType?: string;
+}
+
 export interface User {
   id: string;
   username: string;
@@ -28,7 +37,7 @@ export interface Message {
   sender_id: string;
   text: string;
   type: 'text';
-  attachments?: any[];
+  attachments?: Attachment[];
   timestamp: string;
   status: 'sent' | 'delivered' | 'read';
 }
