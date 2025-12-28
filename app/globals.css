@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Core palette - warm dark with terracotta accent */
+    --bg-base: #0f0f0f;
+    --bg-elevated: #161616;
+    --bg-surface: #1c1c1c;
+    --bg-hover: #242424;
+    --bg-active: #2a2a2a;
+    
+    /* Text hierarchy */
+    --text-primary: #f5f5f5;
+    --text-secondary: #a8a8a8;
+    --text-tertiary: #6b6b6b;
+    --text-inverse: #0f0f0f;
+    
+    /* Accent - warm terracotta */
+    --accent: #e07a5f;
+    --accent-hover: #c96a52;
+    --accent-subtle: rgba(224, 122, 95, 0.12);
+    --accent-glow: rgba(224, 122, 95, 0.25);
+    
+    /* Secondary accent - warm cream */
+    --cream: #f4e4bc;
+    --cream-subtle: rgba(244, 228, 188, 0.1);
+    
+    /* Status colors */
+    --success: #4ade80;
+    --success-subtle: rgba(74, 222, 128, 0.12);
+    --warning: #fbbf24;
+    --warning-subtle: rgba(251, 191, 36, 0.12);
+    --error: #f87171;
+    --info: #60a5fa;
+    --info-subtle: rgba(96, 165, 250, 0.12);
+    
+    /* Borders */
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-default: rgba(255, 255, 255, 0.1);
+    --border-strong: rgba(255, 255, 255, 0.15);
+
+    /* Fonts */
+    --font-dm-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-jetbrains-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  }
+  
+  body {
+    @apply bg-bg-base text-text-primary;
+    font-family: var(--font-dm-sans);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .font-mono {
+    font-family: var(--font-jetbrains-mono);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 200ms ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { 
+      opacity: 0; 
+      transform: translateY(8px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-active);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}

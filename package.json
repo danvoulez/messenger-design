@@ -1,27 +1,50 @@
 {
   "name": "ubl-console-messenger",
-  "version": "2.0.0",
-  "description": "Real-time messaging application with WhatsApp-like interface",
-  "main": "api/index.js",
+  "version": "3.0.0",
+  "description": "Professional real-time messaging application built with Next.js",
+  "private": true,
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js",
-    "test": "echo \"No tests yet\" && exit 0"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "keywords": [
     "ubl",
     "console",
     "messenger",
-    "governance"
+    "governance",
+    "nextjs",
+    "react",
+    "websocket"
   ],
   "author": "LogLine Foundation",
   "license": "MIT",
   "dependencies": {
+    "next": "^15.1.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "body-parser": "^1.20.2",
     "uuid": "^9.0.1",
-    "ws": "^8.14.2"
+    "ws": "^8.14.2",
+    "swr": "^2.2.5",
+    "date-fns": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.7.2",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^15.1.4",
+    "tailwindcss": "^3.4.17",
+    "postcss": "^8.4.49",
+    "autoprefixer": "^10.4.20"
   },
   "engines": {
     "node": ">=18.x"
