@@ -4,9 +4,9 @@
   "description": "Professional real-time messaging application built with Next.js",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node server-nextjs.js",
     "build": "next build",
-    "start": "next start",
+    "start": "node server-nextjs.js",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
   },

@@ -1,148 +1,102 @@
 # Deployment Guide
 
-## Quick Deploy to Vercel
+## UBL Messenger - Next.js Application
 
-### Option 1: One-Click Deploy
-1. Click the "Deploy to Vercel" button in README.md
-2. Vercel will automatically detect the configuration
-3. Deploy and get your live URL
+This guide covers deployment options for the professional Next.js messenger application.
 
-### Option 2: Vercel CLI
+## Table of Contents
+- [Vercel Deployment](#vercel-deployment)
+- [Custom Server Deployment](#custom-server-deployment)
+- [Environment Variables](#environment-variables)
+- [WebSocket Considerations](#websocket-considerations)
+
+## Vercel Deployment
+
+### One-Click Deploy
+The easiest way to deploy is using Vercel's one-click deploy:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/danvoulez/messenger-design)
+
+### Manual Deployment
+
+1. Install Vercel CLI:
 ```bash
-# Install Vercel CLI
 npm i -g vercel
+```
 
-# Deploy from project directory
-cd messenger-design
+2. Deploy:
+```bash
 vercel
-
-# Follow prompts to link to your Vercel account
 ```
 
-### Option 3: GitHub Integration
-1. Connect your GitHub repository to Vercel
-2. Push changes to trigger automatic deployment
-3. Vercel will build and deploy on every push
+3. Follow the prompts to complete deployment.
 
-## Configuration
+### Important Note about WebSocket on Vercel
 
-The `vercel.json` file is already configured:
-```json
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
-  ]
-}
-```
+⚠️ **WebSocket limitations**: Vercel uses serverless functions that don't support long-lived WebSocket connections. The app will work for viewing the UI and sending messages via API calls, but real-time features (like instant message delivery and typing indicators) will not function.
+
+**Solutions for real-time features on Vercel:**
+1. **Use a separate WebSocket server** on a platform that supports persistent connections
+2. **Implement polling** as a fallback mechanism
+3. **Use a managed real-time service** like Pusher, Ably, or Socket.io Cloud
+
+## Custom Server Deployment
+
+For full WebSocket support, deploy to a platform that supports long-running Node.js servers:
+
+### Railway
+
+1. Create a new project on [Railway](https://railway.app)
+2. Connect your GitHub repository
+3. Railway will automatically detect your Node.js app
+4. Deploy!
+
+### Render
+
+1. Create a new Web Service on [Render](https://render.com)
+2. Connect your GitHub repository
+3. Configure:
+   - Build Command: `npm install && npm run build`
+   - Start Command: `npm start`
+4. Deploy!
+
+### DigitalOcean App Platform
+
+1. Create a new App on [DigitalOcean](https://www.digitalocean.com/products/app-platform)
+2. Connect your GitHub repository
+3. Deploy!
 
 ## Environment Variables
 
-No environment variables are required for the demo version. The app uses in-memory storage.
-
-For production, you may want to add:
-- `NODE_ENV=production`
-- Database connection strings
-- Authentication secrets
-- API keys for external services
-
-## Post-Deployment
-
-After deployment:
-1. Visit your Vercel URL
-2. The Admin Banner should activate automatically after 1 second
-3. An approval card (L3 risk) will appear after 2 seconds
-4. Test the approval flow
-
-## Local Development
+Create a `.env.local` file for development:
 
 ```bash
-# Install dependencies
-npm install
+# Optional: Override default port
+PORT=3000
 
-# Run development server
-npm run dev
-
-# Access at http://localhost:3000
+# Optional: Set Node environment
+NODE_ENV=production
 ```
 
-## Project Structure
+## WebSocket Considerations
 
-```
-messenger-design/
-├── api/
-│   └── index.js          # Express API server
-├── public/
-│   └── index.html        # Frontend SPA
-├── server.js             # Local dev server
-├── package.json          # Dependencies
-├── vercel.json           # Vercel config
-└── README.md            # Documentation
-```
+### Development
+WebSocket works out of the box in development using the custom server (`server-nextjs.js`).
 
-## API Endpoints
+### Production with Custom Server
+When deploying to platforms that support WebSocket (Railway, Render, DigitalOcean, etc.), the WebSocket connection will work automatically.
 
-All endpoints are available at `/api`:
+### Production on Vercel (Serverless)
+For Vercel deployments, consider implementing polling or using a managed real-time service.
 
-- `GET  /health` - Health check
-- `GET  /v1/participants` - List participants
-- `POST /v1/cards/propose` - Propose action
-- `GET  /v1/cards/:id` - Get card
-- `POST /v1/policy/permit` - Request permit
-- `POST /v1/commands/issue` - Issue command
-- `GET  /v1/query/commands` - Query commands
-- `POST /v1/exec.finish` - Finish execution
-- `GET  /v1/receipts` - Get receipts
-- `GET  /v1/allowlist` - Get allowlist
-- `GET  /v1/policy/manifest` - Get policy manifest
+## Production Checklist
 
-## Features Verified
+- [ ] Build succeeds: `npm run build`
+- [ ] Choose deployment platform based on WebSocket needs
+- [ ] Configure custom domain (optional)
+- [ ] Test all features in production environment
+- [ ] Implement authentication before public launch
 
-✅ WhatsApp-like dark theme UI
-✅ Admin blue banner with TTL countdown
-✅ Approval cards with risk badges (L0-L5)
-✅ Hash display (policy_hash, subject_hash)
-✅ Parameters toggle (Summary/JSON)
-✅ Hold-to-approve for L3
-✅ WebAuthn modal for L4/L5
-✅ Toast notifications with clickable IDs
-✅ Keyboard shortcuts (A, V, Escape)
-✅ Result cards with artifacts and logs
-✅ Participant management (humans + agents)
-✅ Full API backend with Express.js
-✅ Vercel deployment configuration
+---
 
-## Support
-
-For issues or questions:
-- Check the README.md for full documentation
-- Review the problem statement for feature requirements
-- Test API endpoints using curl or Postman
-
-## Next Steps
-
-To extend the application:
-1. Add persistent storage (PostgreSQL, MongoDB)
-2. Implement real WebAuthn authentication
-3. Add WebSocket for real-time updates
-4. Create dedicated views for Pending/Receipts
-5. Implement quorum approval for L5
-6. Add i18n translations
-7. Create comprehensive test suite
+**Note**: This is a demo application. Implement proper authentication, database persistence, and security measures before deploying to production.
