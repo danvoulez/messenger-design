@@ -256,7 +256,9 @@ app.post('/v1/conversations/:id/messages', (req, res) => {
   const message = {
     id: `msg_${uuidv4()}`,
     conversation_id: conversationId,
-    sender_id: "U.001", // Current user (would be from auth in real app)
+    // NOTE: In a production app, sender_id should come from authenticated session/JWT token
+    // For this demo, we're hardcoding to U.001 (Dan)
+    sender_id: "U.001",
     text,
     type,
     attachments,

@@ -1709,7 +1709,9 @@
     // ============================================
     
     const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
-    const WS_URL = window.location.hostname === 'localhost' ? 'ws://localhost:3000' : `ws://${window.location.host}`;
+    const WS_URL = window.location.hostname === 'localhost' 
+      ? 'ws://localhost:3000' 
+      : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
     
     // State Management
     const state = {
