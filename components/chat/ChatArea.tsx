@@ -12,7 +12,13 @@ interface ChatAreaProps {
   onMessageSent: () => void;
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = async (url: string) => {
+  const token = localStorage.getItem('ubl_session_token');
+  const response = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return response.json();
+};
 
 export default function ChatArea({
   conversation,
@@ -53,9 +59,13 @@ export default function ChatArea({
     if (!conversation || !messageText.trim()) return;
 
     try {
+      const token = localStorage.getItem('ubl_session_token');
       const response = await fetch(`/api/v1/conversations/${conversation.id}/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ text: messageText.trim() }),
       });
 

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth-context";
 
 export const metadata: Metadata = {
   title: "UBL Messenger — LogLine Foundation",
-  description: "Professional real-time messaging application with WhatsApp-like interface",
+  description: "Professional real-time messaging application with WebAuthn authentication",
 };
 
 export default function RootLayout({
@@ -21,7 +22,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased overflow-hidden h-screen">{children}</body>
+      <body className="antialiased overflow-hidden h-screen">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
+import { getSessionFromRequest } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const session = await getSessionFromRequest(request);
+  
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Get conversations for this user in their tenant
+  const conversations = storage.getConversations(session.tenantId, session.userId);
+  
   // Sort by last message timestamp
-  const sorted = [...storage.conversations].sort((a, b) => {
+  const sorted = [...conversations].sort((a, b) => {
     const aTime = a.last_message ? new Date(a.last_message.timestamp).getTime() : 0;
     const bTime = b.last_message ? new Date(b.last_message.timestamp).getTime() : 0;
     return bTime - aTime;
@@ -13,18 +23,29 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const session = await getSessionFromRequest(request);
+  
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { type, name, participants } = await request.json();
   
-  const conversation = {
+  // Ensure the current user is in the participants list
+  const allParticipants = participants.includes(session.userId)
+    ? participants
+    : [...participants, session.userId];
+  
+  const conversation = storage.createConversation({
     id: `conv_${Date.now()}`,
     type: type || 'direct',
     name,
     avatar_url: null,
-    participants,
+    participants: allParticipants,
     unread_count: 0,
-    created_at: new Date().toISOString()
-  };
+    created_at: new Date().toISOString(),
+    tenantId: session.tenantId,
+  });
   
-  storage.conversations.push(conversation);
   return NextResponse.json({ conversation }, { status: 201 });
 }

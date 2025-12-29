@@ -2,10 +2,16 @@ const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
 const WebSocket = require('ws');
+const { jwtVerify } = require('jose');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = process.env.PORT || 3000;
+
+// JWT Secret (should match the one in lib/auth.ts)
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'ubl-messenger-secret-key-change-in-production'
+);
 
 // Prepare Next.js app
 const app = next({ dev, hostname, port });
@@ -29,25 +35,58 @@ app.prepare().then(() => {
   wss.on('connection', (ws) => {
     console.log('📱 New WebSocket connection');
 
-    ws.on('message', (message) => {
+    ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message);
         console.log('📨 Received:', data.type);
 
         switch (data.type) {
           case 'authenticate':
-            ws.userId = data.userId || 'U.001';
-            ws.send(JSON.stringify({
-              type: 'authenticated',
-              userId: ws.userId,
-              timestamp: new Date().toISOString()
-            }));
+            // Verify JWT token
+            if (data.token) {
+              try {
+                const { payload } = await jwtVerify(data.token, JWT_SECRET);
+                ws.userId = payload.userId;
+                ws.tenantId = payload.tenantId;
+                ws.authenticated = true;
+                ws.send(JSON.stringify({
+                  type: 'authenticated',
+                  userId: ws.userId,
+                  tenantId: ws.tenantId,
+                  timestamp: new Date().toISOString()
+                }));
+                console.log(`✅ Authenticated user: ${ws.userId} (tenant: ${ws.tenantId})`);
+              } catch (error) {
+                console.error('❌ Authentication failed:', error);
+                ws.send(JSON.stringify({
+                  type: 'error',
+                  message: 'Authentication failed',
+                  timestamp: new Date().toISOString()
+                }));
+              }
+            } else {
+              // Fallback for backward compatibility (demo mode)
+              ws.userId = data.userId || 'U.001';
+              ws.tenantId = 'T.UBL';
+              ws.authenticated = false;
+              ws.send(JSON.stringify({
+                type: 'authenticated',
+                userId: ws.userId,
+                timestamp: new Date().toISOString()
+              }));
+            }
             break;
 
           case 'message':
-            // Broadcast message to all connected clients except sender
+            // Broadcast message to all connected clients in the same tenant
+            if (!ws.authenticated) {
+              console.log('⚠️ Unauthenticated message broadcast (demo mode)');
+            }
+            
             wss.clients.forEach((client) => {
-              if (client !== ws && client.readyState === WebSocket.OPEN) {
+              if (client !== ws && 
+                  client.readyState === WebSocket.OPEN &&
+                  (!ws.tenantId || client.tenantId === ws.tenantId)) {
                 client.send(JSON.stringify({
                   type: 'new_message',
                   message: data.message,
@@ -58,9 +97,11 @@ app.prepare().then(() => {
             break;
 
           case 'typing':
-            // Broadcast typing indicator
+            // Broadcast typing indicator to clients in same tenant
             wss.clients.forEach((client) => {
-              if (client !== ws && client.readyState === WebSocket.OPEN) {
+              if (client !== ws && 
+                  client.readyState === WebSocket.OPEN &&
+                  (!ws.tenantId || client.tenantId === ws.tenantId)) {
                 client.send(JSON.stringify({
                   type: 'typing',
                   conversation_id: data.conversation_id,
@@ -73,9 +114,11 @@ app.prepare().then(() => {
             break;
 
           case 'read_receipt':
-            // Broadcast read receipt
+            // Broadcast read receipt to clients in same tenant
             wss.clients.forEach((client) => {
-              if (client !== ws && client.readyState === WebSocket.OPEN) {
+              if (client !== ws && 
+                  client.readyState === WebSocket.OPEN &&
+                  (!ws.tenantId || client.tenantId === ws.tenantId)) {
                 client.send(JSON.stringify({
                   type: 'read_receipt',
                   message_id: data.message_id,
@@ -108,5 +151,6 @@ app.prepare().then(() => {
     console.log(`🚀 Next.js Messenger App running on http://${hostname}:${port}`);
     console.log(`📡 API: http://${hostname}:${port}/api/health`);
     console.log(`💬 WebSocket: ws://${hostname}:${port}`);
+    console.log(`🔐 Authentication: WebAuthn enabled`);
   });
 });
