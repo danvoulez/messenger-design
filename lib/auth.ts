@@ -105,7 +105,7 @@ export async function generateRegistrationChallenge(
   username: string,
   displayName: string,
   tenantId: string = 'T.UBL'
-): Promise<{ challengeId: string; options: any }> {
+): Promise<{ challengeId: string; options: Record<string, unknown> }> {
   // Check if user already exists
   const existingUser = storage.getUserByUsername(username, tenantId);
   if (existingUser) {
@@ -182,7 +182,7 @@ export async function verifyRegistrationChallenge(
   });
 
   // Store credential
-  const { credential, credentialDeviceType } = verification.registrationInfo;
+  const { credential } = verification.registrationInfo;
   const credentials = userCredentials.get(userId) || [];
   credentials.push({
     id: Buffer.from(credential.id).toString('base64'),
@@ -214,7 +214,7 @@ export async function verifyRegistrationChallenge(
 export async function generateAuthenticationChallenge(
   username: string,
   tenantId: string = 'T.UBL'
-): Promise<{ challengeId: string; options: any }> {
+): Promise<{ challengeId: string; options: Record<string, unknown> }> {
   // Check if user exists
   const user = storage.getUserByUsername(username, tenantId);
   if (!user) {

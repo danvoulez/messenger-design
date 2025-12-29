@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('ubl_session_token', token);
   };
 
-  const login = async (username: string, password?: string) => {
+  const login = async () => {
     // Login is handled by WebAuthn flow in the login page
     // This is just a placeholder
     throw new Error('Use WebAuthn login flow');

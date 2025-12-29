@@ -1,4 +1,4 @@
-import { Conversation, Message, User, Attachment } from '@/types';
+import { Conversation, Message, User } from '@/types';
 
 // Extended User type with tenant support
 export interface TenantUser extends User {

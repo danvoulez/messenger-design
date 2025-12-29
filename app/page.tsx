@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
-import { Conversation, Message, User } from '@/types';
+import { Conversation } from '@/types';
 import Sidebar from '@/components/chat/Sidebar';
 import ChatArea from '@/components/chat/ChatArea';
 import { useAuth } from '@/lib/auth-context';

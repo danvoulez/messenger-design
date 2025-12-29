@@ -67,9 +67,9 @@ export default function LoginPage() {
       setAuthToken(session_token);
       await checkAuth();
       router.push('/');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Registration error:', err);
-      setError(err.message || 'Registration failed');
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -127,9 +127,9 @@ export default function LoginPage() {
       setAuthToken(session_token);
       await checkAuth();
       router.push('/');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Login error:', err);
-      setError(err.message || 'Login failed');
+      setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -285,7 +285,7 @@ export default function LoginPage() {
             <p className="text-xs text-text-tertiary text-center">
               {mode === 'login' ? (
                 <>
-                  Don't have an account?{' '}
+                  Don&apos;t have an account?{' '}
                   <button
                     onClick={() => setMode('register')}
                     className="text-accent-default hover:text-accent-light"
