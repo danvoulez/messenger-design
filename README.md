@@ -1,10 +1,10 @@
-# Real-Time Messenger App
+# Professional Real-Time Messenger App
 
-A WhatsApp-like messaging application with real-time communication, beautiful UI, and modern features.
+A professional WhatsApp-like messaging application built with **Next.js 15**, **React 19**, **TypeScript**, and **WebSocket** for real-time communication. Features a beautiful dark theme UI with warm terracotta accents.
 
 ## 🎯 What is this?
 
-A real-time messaging application that allows users to send and receive messages instantly, just like WhatsApp. Built with Node.js, Express, WebSocket, and vanilla JavaScript with a beautiful dark theme UI.
+A production-ready real-time messaging application that allows users to send and receive messages instantly. Built with modern web technologies including Next.js, React, TypeScript, and WebSocket, with a beautiful responsive UI powered by Tailwind CSS.
 
 ## ✨ Features
 
@@ -15,20 +15,75 @@ A real-time messaging application that allows users to send and receive messages
 - **Unread message badges** to track new messages
 - **Online/offline status** for users
 - **Beautiful WhatsApp-like UI** with warm dark theme
-- **Responsive design** that works on all devices
-- **Emoji support** 🎉
-- **Time formatting** (smart relative timestamps)
+- **Fully responsive design** that works on all devices
+- **TypeScript** for type safety and better developer experience
+- **Modern React** with hooks and functional components
+- **SWR** for efficient data fetching and caching
+- **Tailwind CSS** for utility-first styling
+- **Professional component architecture** with separation of concerns
 
-## 🚀 How to Use
+## 🚀 Quick Start
 
-### 1. Select a Conversation
-Click on any conversation in the sidebar to open it and view the message history.
+### Prerequisites
+- Node.js >= 18.x
+- npm or yarn
 
-### 2. Send Messages
-Type your message in the input field at the bottom and press Enter or click the send button.
+### Install Dependencies
+```bash
+npm install
+```
 
-### 3. Real-time Updates
-Messages appear instantly for all participants in the conversation thanks to WebSocket connections.
+### Run Development Server
+```bash
+npm run dev
+```
+
+The app will be available at `http://localhost:3000`
+
+### Build for Production
+```bash
+npm run build
+npm start
+```
+
+## 🏗️ Architecture
+
+### Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes
+- **Real-time**: WebSocket (ws library with custom server)
+- **Data Fetching**: SWR for client-side data fetching
+- **State Management**: React hooks (useState, useEffect)
+- **Storage**: In-memory (demo only - use a database for production)
+
+### Project Structure
+
+```
+.
+├── app/
+│   ├── api/                    # Next.js API routes
+│   │   ├── health/            # Health check endpoint
+│   │   └── v1/                # Versioned API endpoints
+│   │       ├── conversations/ # Conversation endpoints
+│   │       └── users/         # User endpoints
+│   ├── globals.css            # Global styles with Tailwind
+│   ├── layout.tsx             # Root layout component
+│   └── page.tsx               # Main messenger page
+├── components/
+│   └── chat/                  # Chat-related components
+│       ├── Sidebar.tsx        # Conversation list sidebar
+│       └── ChatArea.tsx       # Main chat interface
+├── lib/
+│   └── storage.ts             # In-memory data storage
+├── types/
+│   └── index.ts               # TypeScript type definitions
+├── server-nextjs.js           # Custom server with WebSocket
+├── next.config.ts             # Next.js configuration
+├── tailwind.config.ts         # Tailwind CSS configuration
+├── tsconfig.json              # TypeScript configuration
+└── package.json               # Dependencies and scripts
+```
 
 ## 📋 API Endpoints
 
@@ -36,22 +91,13 @@ Messages appear instantly for all participants in the conversation thanks to Web
 GET  /api/health                              # Health check
 GET  /api/v1/users                            # Get all users
 GET  /api/v1/users/me                         # Get current user
-PATCH /api/v1/users/me/status                 # Update user status
 
 GET  /api/v1/conversations                    # List all conversations
-GET  /api/v1/conversations/:id                # Get conversation details
 POST /api/v1/conversations                    # Create new conversation
 POST /api/v1/conversations/:id/read           # Mark conversation as read
 
 GET  /api/v1/conversations/:id/messages       # Get messages in conversation
 POST /api/v1/conversations/:id/messages       # Send a message
-PATCH /api/v1/messages/:id                    # Update message status
-DELETE /api/v1/messages/:id                   # Delete a message
-
-POST /api/v1/conversations/:id/typing         # Send typing indicator
-GET  /api/v1/conversations/:id/typing         # Get typing users
-
-GET  /api/v1/search/messages                  # Search messages
 ```
 
 ## 🔌 WebSocket Events
@@ -70,33 +116,36 @@ The app uses WebSocket for real-time communication:
 - `typing` - Receive typing indicator
 - `read_receipt` - Receive read receipt
 
-## 🔧 Development
+## 🎨 Design Philosophy
 
-### Prerequisites
-- Node.js >= 18.x
+**Professional & Modern** because:
+- Built with Next.js and React for production-ready code
+- TypeScript for type safety and maintainability
+- Component-based architecture for reusability
+- Tailwind CSS for consistent, responsive design
+- SWR for efficient data fetching
+- Clean code structure following best practices
+- Real-time updates with WebSocket
+- Beautiful warm dark theme with terracotta accents
+- Smooth animations and transitions
+- Mobile-first responsive design
 
-### Install Dependencies
-```bash
-npm install
-```
-
-### Run Locally
-```bash
-npm run dev
-```
-
-The app will be available at `http://localhost:3000`
-
-### Demo Limitations
+## ⚠️ Demo Limitations
 
 **Important:** This is a demo application with some limitations:
 
 - **No Authentication**: All users are hardcoded. In production, implement proper authentication (JWT, OAuth, etc.)
-- **In-Memory Storage**: Messages are stored in memory and will be lost on server restart. Use a database for production.
+- **In-Memory Storage**: Data is stored in memory and will be lost on server restart. Use a database for production.
 - **Single User**: The demo always sends messages as "Dan" (U.001). Multi-user support requires authentication.
 - **No Persistence**: Conversation and message history is not persisted between sessions.
+- **WebSocket on Vercel**: Vercel doesn't support WebSockets in serverless functions. For production deployment with real-time features, consider:
+  - Using a separate WebSocket server (e.g., on Railway, Render, or AWS)
+  - Implementing polling as a fallback
+  - Using a managed real-time service (e.g., Pusher, Ably, or Socket.io with external hosting)
 
-For production use, consider implementing:
+### For Production Use
+
+Consider implementing:
 - User authentication and session management
 - Database storage (PostgreSQL, MongoDB, etc.)
 - Rate limiting and abuse prevention
@@ -105,6 +154,10 @@ For production use, consider implementing:
 - Push notifications
 - User presence tracking
 - Message search and filtering
+- Email notifications
+- Backup and recovery
+- Monitoring and logging
+- Security best practices (HTTPS, CSP, etc.)
 
 ## 🚀 Deploy to Vercel
 
@@ -116,54 +169,25 @@ For production use, consider implementing:
 vercel
 ```
 
-## 🏗️ Architecture
+**Note:** WebSocket functionality will not work on Vercel's serverless environment. The app will work for viewing the UI, but real-time messaging requires a separate WebSocket server or alternative implementation.
 
-### Tech Stack
+## 🔧 Development
 
-- **Frontend**: Vanilla JavaScript, HTML5, CSS3
-- **Backend**: Node.js, Express
-- **Real-time**: WebSocket (ws library)
-- **Storage**: In-memory (demo only)
-
-### Flow
-
-```
-User → WebSocket ← Server
-         ↕
-    REST API ← Database (in-memory)
+### Type Checking
+```bash
+npm run type-check
 ```
 
-1. **User sends message**: POST to `/api/v1/conversations/:id/messages`
-2. **Server stores message**: In-memory storage
-3. **Server broadcasts**: WebSocket sends to all connected clients
-4. **Clients receive**: Update UI in real-time
-
-## 🎨 Design Philosophy
-
-**WhatsApp-inspired** because:
-- Clean, familiar messaging interface
-- Real-time updates with WebSocket
-- Message status indicators (sent/read)
-- Typing indicators for active conversations
-- Unread badges for new messages
-- Beautiful warm dark theme with terracotta accents
-- Responsive and mobile-friendly
-- Smooth animations and transitions
-- Emoji support for expressive communication
-
-## 📁 Project Structure
-
+### Linting
+```bash
+npm run lint
 ```
-.
-├── api/
-│   └── index.js          # Express API server with REST endpoints
-├── public/
-│   └── index.html        # Frontend SPA with embedded CSS/JS
-├── server.js             # WebSocket + HTTP server
-├── package.json          # Dependencies
-├── vercel.json           # Vercel deployment config
-└── README.md             # This file
-```
+
+### Environment Variables
+
+For production deployment, you may want to set:
+- `NODE_ENV=production` - Set environment to production
+- `PORT=3000` - Set server port (default: 3000)
 
 ## 📝 License
 
@@ -171,4 +195,7 @@ MIT
 
 ---
 
-Built with ❤️ as a real-time messaging demo
+Built with ❤️ using Next.js, React, TypeScript, and WebSocket
+
+**From Demo to Production-Ready**
+This project has been migrated from a vanilla JavaScript demo to a professional Next.js application with modern architecture, type safety, and best practices.
