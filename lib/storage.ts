@@ -1,116 +1,121 @@
-import { Conversation, Message, User, Attachment } from '@/types';
+import { Conversation, Message, User } from '@/types';
+
+// Extended User type with tenant support
+export interface TenantUser extends User {
+  tenantId: string;
+}
+
+// Extended Conversation type with tenant support
+export interface TenantConversation extends Conversation {
+  tenantId: string;
+}
+
+// Extended Message type with tenant support
+export interface TenantMessage extends Message {
+  tenantId: string;
+}
 
 // In-memory storage (for demo purposes - in production use a database)
 export const storage = {
-  users: [
-    {
-      id: "U.001",
-      username: "dan",
-      display_name: "Dan",
-      avatar_url: "https://api.dicebear.com/7.x/notionists/svg?seed=dan&backgroundColor=f5f5f5",
-      status: "online" as const,
-      last_seen: new Date().toISOString()
-    },
-    {
-      id: "U.002",
-      username: "alex",
-      display_name: "Alex (Advisor)",
-      avatar_url: "https://api.dicebear.com/7.x/notionists/svg?seed=alex&backgroundColor=e0e0e0",
-      status: "online" as const,
-      last_seen: new Date().toISOString()
-    },
-    {
-      id: "U.003",
-      username: "sarah",
-      display_name: "Sarah (Designer)",
-      avatar_url: "https://api.dicebear.com/7.x/notionists/svg?seed=sarah&backgroundColor=c8e6c9",
-      status: "away" as const,
-      last_seen: new Date(Date.now() - 3600000).toISOString()
+  users: [] as TenantUser[],
+  conversations: [] as TenantConversation[],
+  messages: [] as TenantMessage[],
+  typing: {} as Record<string, Record<string, string>>,
+
+  // User methods
+  createUser(user: Omit<TenantUser, 'last_seen'>): TenantUser {
+    const newUser: TenantUser = {
+      ...user,
+      last_seen: new Date().toISOString(),
+    };
+    this.users.push(newUser);
+    return newUser;
+  },
+
+  getUser(userId: string, tenantId: string): TenantUser | undefined {
+    return this.users.find((u) => u.id === userId && u.tenantId === tenantId);
+  },
+
+  getUserByUsername(username: string, tenantId: string): TenantUser | undefined {
+    return this.users.find((u) => u.username === username && u.tenantId === tenantId);
+  },
+
+  getUsers(tenantId: string): TenantUser[] {
+    return this.users.filter((u) => u.tenantId === tenantId);
+  },
+
+  updateUserStatus(userId: string, tenantId: string, status: User['status']): void {
+    const user = this.getUser(userId, tenantId);
+    if (user) {
+      user.status = status;
+      user.last_seen = new Date().toISOString();
     }
-  ] as User[],
-  conversations: [
-    {
-      id: "conv_001",
-      type: "direct" as const,
-      name: "Alex (Advisor)",
-      avatar_url: "https://api.dicebear.com/7.x/notionists/svg?seed=alex&backgroundColor=e0e0e0",
-      participants: ["U.001", "U.002"],
-      last_message: {
-        text: "Let's sync on the investor deck",
-        timestamp: new Date(Date.now() - 10800000).toISOString(),
-        sender: "U.002"
-      },
-      unread_count: 0,
-      created_at: new Date(Date.now() - 86400000).toISOString()
-    },
-    {
-      id: "conv_002",
-      type: "direct" as const,
-      name: "Sarah (Designer)",
-      avatar_url: "https://api.dicebear.com/7.x/notionists/svg?seed=sarah&backgroundColor=c8e6c9",
-      participants: ["U.001", "U.003"],
-      last_message: {
-        text: "The new mockups are ready!",
-        timestamp: new Date(Date.now() - 7200000).toISOString(),
-        sender: "U.003"
-      },
-      unread_count: 2,
-      created_at: new Date(Date.now() - 172800000).toISOString()
-    },
-    {
-      id: "conv_003",
-      type: "group" as const,
-      name: "UBL 2.0 Sprint",
-      avatar_url: null,
-      participants: ["U.001", "U.002", "U.003"],
-      last_message: {
-        text: "Policy VM bytecode tests passing",
-        timestamp: new Date(Date.now() - 720000).toISOString(),
-        sender: "U.001"
-      },
-      unread_count: 0,
-      created_at: new Date(Date.now() - 259200000).toISOString()
+  },
+
+  // Conversation methods
+  createConversation(conversation: TenantConversation): TenantConversation {
+    this.conversations.push(conversation);
+    return conversation;
+  },
+
+  getConversation(conversationId: string, tenantId: string): TenantConversation | undefined {
+    return this.conversations.find((c) => c.id === conversationId && c.tenantId === tenantId);
+  },
+
+  getConversations(tenantId: string, userId?: string): TenantConversation[] {
+    let conversations = this.conversations.filter((c) => c.tenantId === tenantId);
+    if (userId) {
+      conversations = conversations.filter((c) => c.participants.includes(userId));
     }
-  ] as Conversation[],
-  messages: [
-    {
-      id: "msg_001",
-      conversation_id: "conv_001",
-      sender_id: "U.002",
-      text: "Hey Dan, do you have time this week to review the investor deck?",
-      timestamp: new Date(Date.now() - 14400000).toISOString(),
-      status: "read" as const,
-      type: "text" as const
-    },
-    {
-      id: "msg_002",
-      conversation_id: "conv_001",
-      sender_id: "U.001",
-      text: "Sure! How about Thursday afternoon?",
-      timestamp: new Date(Date.now() - 12600000).toISOString(),
-      status: "read" as const,
-      type: "text" as const
-    },
-    {
-      id: "msg_003",
-      conversation_id: "conv_001",
-      sender_id: "U.002",
-      text: "Perfect! I'll send over the deck by Wednesday.",
-      timestamp: new Date(Date.now() - 11800000).toISOString(),
-      status: "read" as const,
-      type: "text" as const
-    },
-    {
-      id: "msg_004",
-      conversation_id: "conv_001",
-      sender_id: "U.002",
-      text: "Let's sync on the investor deck",
-      timestamp: new Date(Date.now() - 10800000).toISOString(),
-      status: "read" as const,
-      type: "text" as const
+    return conversations;
+  },
+
+  updateConversationLastMessage(
+    conversationId: string,
+    tenantId: string,
+    lastMessage: { text: string; timestamp: string; sender: string }
+  ): void {
+    const conversation = this.getConversation(conversationId, tenantId);
+    if (conversation) {
+      conversation.last_message = lastMessage;
     }
-  ] as Message[],
-  typing: {} as Record<string, Record<string, string>>
+  },
+
+  markConversationAsRead(conversationId: string, tenantId: string): void {
+    const conversation = this.getConversation(conversationId, tenantId);
+    if (conversation) {
+      conversation.unread_count = 0;
+    }
+  },
+
+  incrementUnreadCount(conversationId: string, tenantId: string): void {
+    const conversation = this.getConversation(conversationId, tenantId);
+    if (conversation) {
+      conversation.unread_count = (conversation.unread_count || 0) + 1;
+    }
+  },
+
+  // Message methods
+  createMessage(message: TenantMessage): TenantMessage {
+    this.messages.push(message);
+    return message;
+  },
+
+  getMessages(conversationId: string, tenantId: string, limit?: number): TenantMessage[] {
+    let messages = this.messages.filter(
+      (m) => m.conversation_id === conversationId && m.tenantId === tenantId
+    );
+    
+    messages = messages.sort((a, b) => 
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+
+    if (limit) {
+      messages = messages.slice(-limit);
+    }
+
+    return messages;
+  },
 };
 
 export function createTimestamp() {
